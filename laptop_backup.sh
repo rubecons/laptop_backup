@@ -1,9 +1,9 @@
 #!/bin/bash
 
-#name:		laptot_backup.sh
-#description:	Script de sauvegarde automatique de l'ordinateur, lancé à l'init
-#date:		19 oct 2021
-#author:	rubecons
+#name:		    laptot_backup.sh
+#description:	Script for automatic backup of computer, run at init
+#date:	     	19 oct 2021
+#author:    	rubecons
 
 
 #algorithm :
@@ -19,7 +19,7 @@
 #saves the current date of backup in the preferrences file, or creates it if does not exist
 
 
-#calcul différence en heures entre 2 dates
+#calculation of the very approximative difference  between 2 dates (in hours)
 diff_between_date_now_hours()
 {
 	echo "diff_between_date_now_hours"
@@ -58,11 +58,33 @@ diff_between_date_now_hours()
 }
 
 
-#test du nombre de paramètres
+#tests the number of parameters
 if [ $# -eq 0 ]
 then
 	echo $0
-	echo "pas de paramètres"
+	echo "no parameters"
+else
+	# for parameter in `seq 1 $#` do
+	# 	case $1 in
+	# 		"--install")
+	# 		bInstall=1
+	# 		;;
+	# 		"--include")
+	# 		bInclude=1
+	# 		;;
+	# 		"--exclude")
+	# 		bExclude=1
+	# 		;;
+	# 		*)
+	# 		;;
+	# 	esac
+	# 	shift
+	# done
+	echo $0
+	#--install
+
+	#--include
+	#--exclude
 fi
 
 #test if the file containing the data of the script exists
@@ -80,16 +102,16 @@ then
 		exit 0
 	fi
 else
-	lastSave="jamais"
-	zenity --question --ellipsize --title="laptop-backup" --text="Les informations de sauvegarde n'existent pas, voulez-vous renseigner l'emplacement du disque dur sur lequel effectuer la sauvegarde ?"
+	lastSave="never"
+	zenity --question --ellipsize --title="laptop-backup" --text="Backup data does not exist, do you want to fill in the location of the hard drive to back up?"
 	if [ $? = 0 ]
 	then		
-		hardDriveName=$"`zenity --file-selection --directory --title="veuillez choisir le disque dur sur lequel effectuer la sauvegarde"`"
+		hardDriveName=$"`zenity --file-selection --directory --title="Please choose the hard drive to back up to"`"
 	else
 		exit 1
 	fi
 
-	let "minDelaySave=24*`zenity --scale --title="laptop backup" --text="veuillez choisir la période des sauvegardes en jours" --value=3 --min-value=1 --max-value=10 --step=1`"
+	let "minDelaySave=24*`zenity --scale --title="laptop backup" --text="Please choose the backup period in days" --value=3 --min-value=1 --max-value=10 --step=1`"
 fi
 
 echo "lastSave = $lastSave, hardDriveName = $hardDriveName, minDelaySave = $minDelaySave"
@@ -97,17 +119,18 @@ echo "lastSave = $lastSave, hardDriveName = $hardDriveName, minDelaySave = $minD
 #if the file of the date does not exist, or if the time since the last save is greater than minDelaySave, we first need to see if the drive is connected before starting the save
 while [ ! -e $hardDriveName ]
 do
-	#notify-send "Il est nécessaire de connecter le disc dur pour effectuer la sauvegarde"
-	zenity --warning --ellipsize --timeout=3 --title="laptop backup" --text="Il est nécessaire de connecter le disque dur pour effectuer la sauvegarde"
+	zenity --warning --ellipsize --timeout=3 --title="laptop backup" --text="It is necessary to connect the hard drive to perform the backup"
 	#opython3 popupConnectDisc.py
 done
 
-notify-send "Démarrage de la sauvegarde des documents"
+notify-send "Starting backup"
 
-#sauvegarde
-rsync -avi --exclude-from=./excludeRsync --files-from=./directoriesToRsync --stats /media/dev/$hardDriveName
+#backup
+#rsync -avi --stats --exclude-from=excludeRsync --files-from=directoriesToRsync $hardDriveName
+rsync -avi --stats --exclude-from=excludeRsync ~/Documents ~/Téléchargements/interessant $hardDriveName
 
-notify-send "Sauvegarde terminée" "Prochaine sauvegarde dans $minDelaySave heures, merci"
+
+notify-send "Backup completed" "Next backup in $minDelaySave hours, thank you"
 
 #on enregistre la date actuelle comme étant la date de lastSave, et on réécrit le fichier save.txt
 lastSave=`date +%Y-%m-%d-%H-%M`
@@ -116,9 +139,9 @@ echo "hardDriveName=$hardDriveName" >> save.txt
 echo "minDelaySave=$minDelaySave" >> save.txt
 
 
-echo "Sauvegarde terminée" "Prochaine sauvegarde dans $minDelaySave heures, merci"
+echo "Backup completed" "Next backup in $minDelaySave hours, thank you"
 
-echo "Appuyez sur une touche pour quitter le terminal"
+echo "Press any key to exit the terminal"
 read
 exit 0
 
