@@ -128,25 +128,19 @@ fi
 #--install
 if [ $bInstall -eq 1 ]
 then
-	# if install option, the script adds a init.d script that runs this script at init
+	# if install option, the script adds a line in .profile script that runs this script at session opening
 	scriptName=`echo $0 | cut -d / -f 2`
 	echo $scriptPath
 	echo $scriptName
-
-	#echo "#!/bin/bash" > /etc/profile.d/laptop_backup_init_script.sh
-	#echo .$scriptPath/$scriptName >> /etc/profile.d/laptop_backup_init_script.sh
 	
-	#echo "#!/bin/bash" > ~/profile
 	isPresentInProfile=`grep -rn "$scriptName" /home/$USER/.profile | wc -l`
-	#isPresentInProfile=`grep -rn "$scriptName" /home/$USER/.bashrc | wc -l`
-	echo maintenant
+
 	grep "$scriptName" /home/$USER/.profile
 	grep "$scriptName" /home/$USER/.profile | wc -l
-	echo fini
 	
 	if [ $isPresentInProfile -eq 0 ]
 	then
-		echo "exec gnome-terminal -e $scriptPath/$scriptName &" >> /home/$USER/.profile
+		echo "exec gnome-terminal -e \"$scriptPath/$scriptName --backup \"&" >> /home/$USER/.profile
 		#echo "exec gnome-terminal -e $scriptPath/$scriptName &" >> /home/$USER/.bashrc
 		echo "script is not present in .profile/.bashrc"
 	else
