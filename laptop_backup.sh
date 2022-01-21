@@ -18,12 +18,17 @@
 # backup starts
 # saves the current date of backup in the preferrences file, or creates it if does not exist
 
-
-
+#TODO
+#allow to add include files in the include list (with an HMI)
+#allow to add exclude files in the exclude list (with an HMI)
+#add an icon in desktop and/or menu and/or topbar
+#
+#
+#
 #calculation of the very approximative difference between 2 dates (in hours)
 diff_between_date_now_hours()
 {
-	echo "diff_between_date_now_hours"
+	#echo "diff_between_date_now_hours"
 
 	dateTime=`date +%Y-%m-%d-%H-%M`
 
@@ -33,7 +38,7 @@ diff_between_date_now_hours()
 	hourNow=`echo $dateTime | cut -d - -f 4`
 	minuteNow=`echo $dateTime | cut -d - -f 5`
 
-	echo "$yearNow $monthNow $dayNow $hourNow $minuteNow"
+	#echo "$yearNow $monthNow $dayNow $hourNow $minuteNow"
 
 	yearPast=`echo "$1" | cut -d - -f 1`
 	monthPast=`echo "$1" | cut -d - -f 2`
@@ -41,7 +46,7 @@ diff_between_date_now_hours()
 	hourPast=`echo "$1" | cut -d - -f 4`
 	minutePast=`echo "$1" | cut -d - -f 5`
 
-	echo "$yearPast $monthPast $dayPast $hourPast $minutePast"
+	#echo "$yearPast $monthPast $dayPast $hourPast $minutePast"
 
 	diffYear=`bc <<< $yearNow-$yearPast`
 	diffMonth=`bc <<< $monthNow-$monthPast`
@@ -53,9 +58,8 @@ diff_between_date_now_hours()
 	#diff total of hours, divide the number of minutes by 60
 
 	finalDiffHour=$"`bc <<< "(((((((($diffYear*12)+$diffMonth)*30.437)+$diffDay)*24)+$diffHour)*60)+$diffMinute)/60"`"
-	echo finalDiffHour = $finalDiffHour
-
-	return $finalDiffHour
+	echo $finalDiffHour
+	#return "$finalDiffHour"
 }
 
 
@@ -70,6 +74,8 @@ bExclude=0
 bHelp=0
 
 scriptPath="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
+logFile='log.txt'
+logErrorFile='error.txt'
 
 #tests the number of parameters
 if [ $# -eq 0 ]
@@ -134,23 +140,23 @@ then
 	echo $scriptName
 	
 	isPresentInProfile=`grep -rn "$scriptName" /home/$USER/.profile | wc -l`
-
-	grep "$scriptName" /home/$USER/.profile
-	grep "$scriptName" /home/$USER/.profile | wc -l
 	
 	if [ $isPresentInProfile -eq 0 ]
 	then
-		echo "exec gnome-terminal -e \"$scriptPath/$scriptName --backup \"&" >> /home/$USER/.profile
-		#echo "exec gnome-terminal -e $scriptPath/$scriptName &" >> /home/$USER/.bashrc
 		echo "script is not present in .profile/.bashrc"
+		echo "exec gnome-terminal -e \"$scriptPath/$scriptName --backup 1>$scriptPath/$logFile 2>$scriptPath/$logErrorFile \"&" >> /home/$USER/.profile
+		echo "script has been added in .profile/.bashrc"
 	else
-		echo "script is present in profile/bashrc"
+		echo "script is already present in profile/bashrc"
 	fi
-	#chmod +x ~/profile
-	#chmod +x /etc/profile.d/laptop_backup_init_script.sh
 fi
 
 #--include
+if [ $bInclude -eq 1 ]
+then
+	python3 PopupInclude.py /home/$USER
+fi
+
 #--exclude
 
 #--backup
@@ -169,11 +175,16 @@ then
 		echo "minDelaySave = $minDelaySave"
 		
 		#calculates the hours since the last save, if we are within the delay, nothing to do -> exit
-		resultDiff=`diff_between_date_now_hours $lastSave`
-
-		if [ $resultDiff -lt $minDelaySave ]
+		#diff_between_date_now_hours $lastSave
+		
+		#resultDiff=$?
+		resultDiff=$(diff_between_date_now_hours $lastSave)
+		echo "$resultDiff"
+		if [ "$resultDiff" -lt "$minDelaySave" ]
 		then
 			echo "exit, last backup is too recent"
+			echo "Press any key to exit the terminal"
+			read
 			exit 0
 		fi
 	else
@@ -195,27 +206,38 @@ then
 	while [ ! -e $hardDriveName ]
 	do
 		zenity --warning --ellipsize --timeout=3 --title="laptop backup" --text="It is necessary to connect the hard drive to perform the backup"
-		#opython3 popupConnectDisc.py
+		#python3 popupConnectDisc.py
 	done
 
 	notify-send "Starting backup"
-
+	echo "Starting backup"
+	echo "Please wait..."
+	
 	#backup
-	#rsync -avi --stats --exclude-from=excludeRsync --files-from=directoriesToRsync $hardDriveName
-	rsync -avi --stats --exclude-from=excludeRsync ~/Documents ~/Téléchargements/interessant $hardDriveName
+	rsync -avi --stats --recursive --exclude-from="$scriptPath/excludeRsync.txt" --files-from="$scriptPath/directoriesToRsync.txt" /home/$USER $hardDriveName 1>$scriptPath/$logFile 2>$scriptPath/$logErrorFile
+
+	
+	if [ $? -eq "0" ]
+	then
+		notify-send "Backup completed" "Next backup in $minDelaySave hours, thank you"
+
+		#backup succeed so we can delete the log files
+		rm $scriptPath/$logFile
+		rm $scriptPath/$logErrorFile
+
+		#saves the current date as the lastSave date, and re-write the save.txt file
+		lastSave=`date +%Y-%m-%d-%H-%M`
+		echo "lastSave=$lastSave" > $scriptPath/save.txt
+		echo "hardDriveName=$hardDriveName" >> $scriptPath/save.txt
+		echo "minDelaySave=$minDelaySave" >> $scriptPath/save.txt
 
 
-	notify-send "Backup completed" "Next backup in $minDelaySave hours, thank you"
-
-	#on enregistre la date actuelle comme étant la date de lastSave, et on réécrit le fichier save.txt
-	lastSave=`date +%Y-%m-%d-%H-%M`
-	echo "lastSave=$lastSave" > $scriptPath/save.txt
-	echo "hardDriveName=$hardDriveName" >> $scriptPath/save.txt
-	echo "minDelaySave=$minDelaySave" >> $scriptPath/save.txt
-
-
-	echo "Backup completed" "Next backup in $minDelaySave hours, thank you"
-
+		echo "Backup completed" "Next backup in $minDelaySave hours, thank you"
+	else
+		echo "backup failed"
+		echo "log files (log.txt and error.txt) are loctaed in $scriptPath/"
+	fi
+	
 	echo "Press any key to exit the terminal"
 	read
 fi
