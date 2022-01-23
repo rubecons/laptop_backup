@@ -203,40 +203,48 @@ then
 	echo "lastSave = $lastSave, hardDriveName = $hardDriveName, minDelaySave = $minDelaySave"
 
 	#if the file of the date does not exist, or if the time since the last save is greater than minDelaySave, we first need to see if the drive is connected before starting the save
-	while [ ! -e $hardDriveName ]
-	do
-		zenity --warning --ellipsize --timeout=3 --title="laptop backup" --text="It is necessary to connect the hard drive to perform the backup"
-		#python3 popupConnectDisc.py
-	done
+#	while [ ! -e $hardDriveName ]
+#	do
+#		zenity --warning --ellipsize --timeout=3 --title="laptop backup" --text="It is necessary to connect the hard drive to perform the backup"
+#	done
 
-	notify-send "Starting backup"
-	echo "Starting backup"
-	echo "Please wait..."
-	
-	#backup
-	rsync -avi --stats --recursive --exclude-from="$scriptPath/excludeRsync.txt" --files-from="$scriptPath/directoriesToRsync.txt" /home/$USER $hardDriveName 1>$scriptPath/$logFile 2>$scriptPath/$logErrorFile
+    # popupConnectDisc.py returns 0 if the hardrive is connected else 1
+    python3 popupConnectDisc.py $hardDriveName
+    isHardriveConnected=$?
+    echo $isHardriveConnected
+    if [ 0 -eq $isHardriveConnected ]
+    then
+        notify-send "Starting backup"
+        echo "Starting backup"
+        echo "Please wait..."
+        
+        #backup
+        rsync -avi --stats --recursive --exclude-from="$scriptPath/excludeRsync.txt" --files-from="$scriptPath/directoriesToRsync.txt" /home/$USER $hardDriveName 1>$scriptPath/$logFile 2>$scriptPath/$logErrorFile
 
-	
-	if [ $? -eq "0" ]
-	then
-		notify-send "Backup completed" "Next backup in $minDelaySave hours, thank you"
+        
+        if [ $? -eq "0" ]
+        then
+            notify-send "Backup completed" "Next backup in $minDelaySave hours, thank you"
 
-		#backup succeed so we can delete the log files
-		rm $scriptPath/$logFile
-		rm $scriptPath/$logErrorFile
+            #backup succeed so we can delete the log files
+            rm $scriptPath/$logFile
+            rm $scriptPath/$logErrorFile
 
-		#saves the current date as the lastSave date, and re-write the save.txt file
-		lastSave=`date +%Y-%m-%d-%H-%M`
-		echo "lastSave=$lastSave" > $scriptPath/save.txt
-		echo "hardDriveName=$hardDriveName" >> $scriptPath/save.txt
-		echo "minDelaySave=$minDelaySave" >> $scriptPath/save.txt
+            #saves the current date as the lastSave date, and re-write the save.txt file
+            lastSave=`date +%Y-%m-%d-%H-%M`
+            echo "lastSave=$lastSave" > $scriptPath/save.txt
+            echo "hardDriveName=$hardDriveName" >> $scriptPath/save.txt
+            echo "minDelaySave=$minDelaySave" >> $scriptPath/save.txt
 
 
-		echo "Backup completed" "Next backup in $minDelaySave hours, thank you"
-	else
-		echo "backup failed"
-		echo "log files (log.txt and error.txt) are loctaed in $scriptPath/"
-	fi
+            echo "Backup completed" "Next backup in $minDelaySave hours, thank you"
+        else
+            echo "backup failed"
+            echo "log files (log.txt and error.txt) are loctaed in $scriptPath/"
+        fi
+    else
+        echo "Not Now"
+    fi
 	
 	echo "Press any key to exit the terminal"
 	read
