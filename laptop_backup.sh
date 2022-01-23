@@ -203,15 +203,10 @@ then
 	echo "lastSave = $lastSave, hardDriveName = $hardDriveName, minDelaySave = $minDelaySave"
 
 	#if the file of the date does not exist, or if the time since the last save is greater than minDelaySave, we first need to see if the drive is connected before starting the save
-#	while [ ! -e $hardDriveName ]
-#	do
-#		zenity --warning --ellipsize --timeout=3 --title="laptop backup" --text="It is necessary to connect the hard drive to perform the backup"
-#	done
-
     # popupConnectDisc.py returns 0 if the hardrive is connected else 1
     python3 popupConnectDisc.py $hardDriveName
     isHardriveConnected=$?
-    echo $isHardriveConnected
+
     if [ 0 -eq $isHardriveConnected ]
     then
         notify-send "Starting backup"

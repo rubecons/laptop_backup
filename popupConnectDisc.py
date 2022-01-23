@@ -3,8 +3,6 @@
 #date:		21 oct 2021
 #author:	rubecons
 
-
-from genericpath import isdir
 import sys
 import os.path
 from PyQt5.QtWidgets import QApplication, QButtonGroup, QCheckBox, QDialog, QGraphicsObject, QGroupBox, QHBoxLayout, QLabel, QLineEdit, QVBoxLayout, QWidget, QPushButton
