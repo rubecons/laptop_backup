@@ -5,7 +5,7 @@
 
 import sys
 import os.path
-from PyQt5.QtWidgets import QApplication, QButtonGroup, QCheckBox, QDialog, QGraphicsObject, QGroupBox, QHBoxLayout, QLabel, QLineEdit, QVBoxLayout, QWidget, QPushButton
+from PyQt5.QtWidgets import QApplication, QDialog, QLabel, QVBoxLayout, QPushButton
 from PyQt5.QtCore import QTimer
 
 win = None
@@ -26,7 +26,6 @@ class WindowAsksDriveConnection(QDialog):
         timer.start(3000)
         timer.timeout.connect(self.testIfArgDirExists)
         button.clicked.connect(self.notNow)
-        print("ouverture fenetre")
 
     def testIfArgDirExists(self):
         global executionNotNow

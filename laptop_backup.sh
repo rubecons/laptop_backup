@@ -154,7 +154,7 @@ fi
 #--include
 if [ $bInclude -eq 1 ]
 then
-	python3 PopupInclude.py /home/$USER
+	python3 $scriptPath/popupInclude.py /home/$USER
 fi
 
 #--exclude
@@ -202,28 +202,36 @@ then
 
 	echo "lastSave = $lastSave, hardDriveName = $hardDriveName, minDelaySave = $minDelaySave"
 
-	#if the file of the date does not exist, or if the time since the last save is greater than minDelaySave, we first need to see if the drive is connected before starting the save
-    # popupConnectDisc.py returns 0 if the hardrive is connected else 1
-    python3 popupConnectDisc.py $hardDriveName
-    isHardriveConnected=$?
+    isHardriveConnected=1
+	
+    if [ ! -e $hardDriveName ]
+    then
+        #if the file of the date does not exist, or if the time since the last save is greater than minDelaySave, we first need to see if the drive is connected before starting the save
+        # popupConnectDisc.py returns 0 if the hardrive is connected else 1
+        python3 $scriptPath/popupConnectDisc.py $hardDriveName
+        isHardriveConnected=$?
+    fi
 
     if [ 0 -eq $isHardriveConnected ]
     then
+
+        #backup will start so we can delete the log files of last backup, thus, these files are never backuped
+        echo "Deletion of log and error files : $logFile , $logErrorFile"
+        rm $scriptPath/$logFile
+        rm $scriptPath/$logErrorFile
+
         notify-send "Starting backup"
         echo "Starting backup"
         echo "Please wait..."
         
-        #backup
+        # backup
+        # rsync output and errors are saved in log files. These files are located in the script directory, and will be deleted before next backup
         rsync -avi --stats --recursive --exclude-from="$scriptPath/excludeRsync.txt" --files-from="$scriptPath/directoriesToRsync.txt" /home/$USER $hardDriveName 1>$scriptPath/$logFile 2>$scriptPath/$logErrorFile
 
         
         if [ $? -eq "0" ]
         then
             notify-send "Backup completed" "Next backup in $minDelaySave hours, thank you"
-
-            #backup succeed so we can delete the log files
-            rm $scriptPath/$logFile
-            rm $scriptPath/$logErrorFile
 
             #saves the current date as the lastSave date, and re-write the save.txt file
             lastSave=`date +%Y-%m-%d-%H-%M`
