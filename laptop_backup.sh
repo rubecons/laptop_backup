@@ -210,6 +210,8 @@ then
         # popupConnectDisc.py returns 0 if the hardrive is connected else 1
         python3 $scriptPath/popupConnectDisc.py $hardDriveName
         isHardriveConnected=$?
+    else
+        isHardriveConnected=0
     fi
 
     if [ 0 -eq $isHardriveConnected ]
@@ -240,13 +242,13 @@ then
             echo "minDelaySave=$minDelaySave" >> $scriptPath/save.txt
 
 
-            echo "Backup completed" "Next backup in $minDelaySave hours, thank you"
+            echo -e "\033[0;32mBackup completed" "Next backup in $minDelaySave hours, thank you"
         else
-            echo "backup failed"
+            echo -e "\033[0;31mbackup failed"
             echo "log files (log.txt and error.txt) are loctaed in $scriptPath/"
         fi
     else
-        echo "Not Now"
+        echo -e "\033[0;33mNot Now"
     fi
 	
 	echo "Press any key to exit the terminal"
