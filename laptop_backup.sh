@@ -25,7 +25,8 @@
 #
 #
 #
-#calculation of the very approximative difference between 2 dates (in hours)
+
+# Calculation of the very approximative difference between 2 dates (in hours)
 diff_between_date_now_hours()
 {
 	#echo "diff_between_date_now_hours"
@@ -63,6 +64,19 @@ diff_between_date_now_hours()
 }
 
 
+# Print the options of the script
+print_options()
+{
+    echo $0
+    echo "To use the laptop_backup script, please use the following options"
+    echo "--install          - The first time you use the script, it will set the automaticity of the script each time you enter the session"
+    echo "--backup           - To perform the backup"
+    echo "--include          - To add directories to backup list"
+    echo "--exclude          - To add directories to exclude list, they won't be backuped"
+    echo "--log              - To show the log   file of last backup"
+    echo "--error            - To show the error file of last backup"
+    echo "--help             - To show this menu"
+}
 
 #############################################################
 #############################################################
@@ -80,55 +94,54 @@ logErrorFile='error.txt'
 #tests the number of parameters
 if [ $# -eq 0 ]
 then
-	echo $0
-	echo "To use the laptop_backup script, please use the following options"
-	echo "--install          - The first time you use the script, it will set the automaticity of the script each time you enter the session"
-	echo "--backup           - To perform the backup"
-	echo "--include          - To add directories to backup list"
-	echo "--exclude          - To add directories to exclude list, they won't be backuped"
-	echo "--help              - To show this menu"
-	
-	exit 0
+    print_options
+    exit 0
 else
-	 for parameter in $*
-	 do
-	 	case $parameter in
-	 		"--install")
-	 		bInstall=1
-	 		;;
-	 		"--backup")
-	 		bBackup=1
-	 		;;
-			"--include")
-			bInclude=1
-	 		echo TODO
-			;;
-			"--exclude")
-			bExclude=1
-	 		echo TODO
-			;;
-			"--help")
-	 		bHelp=1
-			;;
-	 		*)
-	 		echo "unknown parameter: " $parameter
-	 		;;
-	 	esac
+    for parameter in $*
+    do
+        case $parameter in
+            "--log")
+            if [ -e $scriptPath/$logFile ]
+            then
+                gedit $scriptPath/$logFile &
+            else
+                echo "No log file to show"
+            fi
+            exit 0
+            ;;
+            "--error")
+            if [ -e $scriptPath/$logErrorFile ]
+            then
+                gedit $scriptPath/$logErrorFile &
+            else
+                echo "No error file to show"
+            fi
+            exit 0
+            ;;
+            "--help")
+            print_options
+            exit 0
+            ;;
+            "--install")
+            bInstall=1
+            ;;
+            "--backup")
+            bBackup=1
+            ;;
+            "--include")
+            bInclude=1
+            echo TODO
+            ;;
+            "--exclude")
+            bExclude=1
+            echo TODO
+            ;;
+            *)
+            echo "unknown parameter: " $parameter
+            ;;
+        esac
 		shift
 	done
-fi
-
-#--help
-if [ $bHelp -eq 1 ]
-then
-	echo "To use the laptop_backup script, please use the following options"
-	echo "--install          - The first time you use the script, it will set the automaticity of the script each time you enter the session"
-	echo "--backup           - To perform the backup"
-	echo "--include          - To add directories to backup list"
-	echo "--exclude          - To add directories to exclude list, they won't be backuped"
-	echo "--help              - To show this menu"
-	
-	exit 0
 fi
 
 #--install
@@ -149,6 +162,55 @@ then
 	else
 		echo "script is already present in profile/bashrc"
 	fi
+
+    # if install option, the script adds aliases in .bash_aliases
+
+    # first checks if .bash_alisaes is mentionned in .bashrc
+    if [ -e /home/$USER/.bashrc ]
+    then
+        isBashAliasesMentionnedInBashrc=`grep -rn ".bash_aliases" /home/$USER/.bashrc | wc -l`
+
+        if [ $isBashAliasesMentionnedInBashrc -eq 0 ]
+        then
+            echo ".bash_aliases is not mentionned in .bashrc"
+            echo "fixing .bashrc..."
+            echo "# Alias definitions."                                                 >> /home/$USER/.bashrc
+            echo "# You may want to put all your additions into a separate file like"   >> /home/$USER/.bashrc
+            echo "# ~/.bash_aliases, instead of adding them here directly."             >> /home/$USER/.bashrc
+            echo "# See /usr/share/doc/bash-doc/examples in the bash-doc package."      >> /home/$USER/.bashrc
+            echo " "                                                                    >> /home/$USER/.bashrc
+            echo "if [ -f ~/.bash_aliases ]; then"                                      >> /home/$USER/.bashrc
+            echo "    . ~/.bash_aliases"                                                >> /home/$USER/.bashrc
+            echo "fi"                                                                   >> /home/$USER/.bashrc
+            echo " "                                                                    >> /home/$USER/.bashrc
+            echo ".bashrc fixed, you now have aliases access from basrc"
+        fi
+    else
+        echo ".bashrc is not present, seems strange"
+    fi
+
+    # checks if .bash_alises exists and creates it if not
+    if [ ! -e /home/$USER/.bash_aliases ]
+    then
+        touch /home/$USER/.bash_aliases
+    fi
+
+    #checks the aliases and creates them if not
+    if [ `grep -rn "backup=" /home/$USER/.bash_aliases | wc -l` -eq 0 ]
+    then
+        echo "alias backup='$scriptPath/$scriptName --backup'" >> /home/$USER/.bash_aliases
+        echo "alias 'backup' created, allows to run backup directly"
+    fi
+    if [ `grep -rn "backup-log" /home/$USER/.bash_aliases | wc -l` -eq 0 ]
+    then
+        echo "alias backup-log='$scriptPath/$scriptName --log'" >> /home/$USER/.bash_aliases
+        echo "alias 'backup-log' created, allows to show log file of last backup"
+    fi
+    if [ `grep -rn "backup-error=" /home/$USER/.bash_aliases | wc -l` -eq 0 ]
+    then
+        echo "alias backup-error='$scriptPath/$scriptName --error'" >> /home/$USER/.bash_aliases
+        echo "alias 'backup-error' created, allows to show error file of last backup"
+    fi
 fi
 
 #--include
@@ -202,19 +264,19 @@ then
 
 	echo "lastSave = $lastSave, hardDriveName = $hardDriveName, minDelaySave = $minDelaySave"
 
-    isHardriveConnected=1
+    isHardriveDisconnected=1
 	
     if [ ! -e $hardDriveName ]
     then
         #if the file of the date does not exist, or if the time since the last save is greater than minDelaySave, we first need to see if the drive is connected before starting the save
         # popupConnectDisc.py returns 0 if the hardrive is connected else 1
         python3 $scriptPath/popupConnectDisc.py $hardDriveName
-        isHardriveConnected=$?
+        isHardriveDisconnected=$?
     else
-        isHardriveConnected=0
+        isHardriveDisconnected=0
     fi
 
-    if [ 0 -eq $isHardriveConnected ]
+    if [ 0 -eq $isHardriveDisconnected ]
     then
 
         #backup will start so we can delete the log files of last backup, thus, these files are never backuped
@@ -243,12 +305,17 @@ then
 
 
             echo -e "\033[0;32mBackup completed" "Next backup in $minDelaySave hours, thank you"
+            echo "log files (log.txt and error.txt) are located in $scriptPath/"
+            echo "To show the log or error files, type the command 'backup-log' or 'backup-error'"
         else
             echo -e "\033[0;31mbackup failed"
-            echo "log files (log.txt and error.txt) are loctaed in $scriptPath/"
+            echo "log files (log.txt and error.txt) are located in $scriptPath/"
+            echo "To show the log or error files, type the command 'backup-log' or 'backup-error'"
         fi
     else
         echo -e "\033[0;33mNot Now"
+        echo "Not Now" >> $scriptPath/$logErrorFile
+        echo "Not Now" >> $scriptPath/$logFile
     fi
 	
 	echo "Press any key to exit the terminal"
@@ -257,6 +324,5 @@ fi
 
 exit 0
 
-
-
 #author : rubecons
+exit 0
