@@ -18,7 +18,7 @@ Rubecons
 - Performs backups of the computer it is installed on, automatically at session start, at a fixed frequency
 - Folders/files to backup are defined in a file in project directory
 - At session start, a terminal runs the programs, and if the time between the last backup is shorter than the choosen period, then the program terminates, else checks if the harddrive is connected.
-- If the harddrive is connected, backup starts, else, a popup appears, and asks the user to connect the harddrive. Once the hardcrive is connected, the popup disappears automatically and backup starts
+- If the harddrive is connected, backup starts, else, a popup appears, and asks the user to connect the harddrive. Once the harddrive is connected, the popup disappears automatically and backup starts
 - Logs and error are stored in files (log.txt and error.txt) located in the project's directory, and renewed at every new backup
 - Aliases exist and are automatically set at installation, and allow to call the script directly
     - ***backup*** : runs backup
@@ -27,7 +27,8 @@ Rubecons
 
 ### TODO
 Add an icon on desktop at installation, to be able to call the script without terminal
-add a popup to choose the files to include to bbackup in a GUI
+add the icon in the main menu, and in the top menu bar
+add a popup to choose the files to include to backup in a GUI
 
 ## Options - how to use the script
 To use the laptop_backup script, please use the following options
@@ -48,10 +49,10 @@ To use the laptop_backup script, please use the following options
 ./laptop_backup.sh --install
 ```
 
-3. The preferences the script asks you to set are, the folder representing your hardrive (often located in Linux in /media/<session_name>/<harddrive_name>), and the frequence of backups
+3. The preferences the script asks you to set are, the folder representing your hardrive (often located in Linux in /media/<session_name>/<harddrive_name>), and the frequency of backups
 
 4. Then you can use the option `--backup` to peform a backup
 ```
 ./laptop_backup.sh --backup
 ```
-Or call directly the alias `backup` from anywhere in you file tree (from a terminal of course) to run a backup
+Or call directly the alias `backup` from anywhere in your file tree (from a terminal of course) to run a backup

@@ -284,7 +284,7 @@ then
         rm $scriptPath/$logFile
         rm $scriptPath/$logErrorFile
 
-        notify-send "Starting backup"
+        notify-send "Starting backup" -i $scriptPath/logo_backup.jpg
         echo "Starting backup"
         echo "Please wait..."
         
@@ -295,7 +295,7 @@ then
         
         if [ $? -eq "0" ]
         then
-            notify-send "Backup completed" "Next backup in $minDelaySave hours, thank you"
+            notify-send -i $scriptPath/logo_backup.jpg "Backup completed" "Next backup in $minDelaySave hours, thank you"
 
             #saves the current date as the lastSave date, and re-write the save.txt file
             lastSave=`date +%Y-%m-%d-%H-%M`
