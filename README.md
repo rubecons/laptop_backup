@@ -26,8 +26,8 @@ Rubecons
     - ***backup-error*** : shows the error log file of last backup
 
 ### TODO
-Add an icon on desktop at installation, to be able to call the script without terminal
-add the icon in the main menu, and in the top menu bar
+Add an icon on desktop
+add the icon in the top menu bar
 add a popup to choose the files to include to backup in a GUI
 
 ## Options - how to use the script
