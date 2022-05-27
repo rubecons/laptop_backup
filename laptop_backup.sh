@@ -211,6 +211,39 @@ then
         echo "alias backup-error='$scriptPath/$scriptName --error'" >> /home/$USER/.bash_aliases
         echo "alias 'backup-error' created, allows to show error file of last backup"
     fi
+
+    # installs an icon in menu to launch backup
+    ICON_NAME=logo-backup
+    TMP_DIR=`mktemp --directory`
+    DESKTOP_FILE=$TMP_DIR/laptop-backup.desktop
+cat << EOF > $DESKTOP_FILE
+[Desktop Entry]
+Version=1.0
+Encoding=UTF-8
+Name=laptop_backup
+GenericName=Backup manager
+Keywords=backup
+Comment=Automatic backup of the computer
+Type=Application
+Categories=Application
+Terminal=true
+StartupNotify=true
+Exec=$scriptPath/laptop_backup.sh --backup
+Icon=$ICON_NAME.png
+EOF
+
+    # seems necessary to refresh immediately:
+    chmod 644 $DESKTOP_FILE
+
+    xdg-desktop-menu install $DESKTOP_FILE
+    xdg-icon-resource install --size  32 "$scriptPath/logo-backup-32.png"  $ICON_NAME
+    xdg-icon-resource install --size  48 "$scriptPath/logo-backup-48.png"  $ICON_NAME
+    xdg-icon-resource install --size  64 "$scriptPath/logo-backup-64.png"  $ICON_NAME
+    xdg-icon-resource install --size 128 "$scriptPath/logo-backup-128.png" $ICON_NAME
+
+    rm $DESKTOP_FILE
+    rm -R $TMP_DIR
+
 fi
 
 #--include
